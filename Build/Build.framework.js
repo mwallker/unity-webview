@@ -7702,24 +7702,37 @@ var ASM_CONSTS = {
   	}
 
   function _WebViewPostMessage(ptr) {
-          const msg = UTF8ToString(ptr);
+          console.log("WebViewPostMessage");
   
-          // Standard web
-          if (window.defold && window.defold.postMessage) {
-              window.defold.postMessage(msg, "*");
-  
+          if (!ptr) {
+              console.error("WebViewPostMessage: null pointer");
               return;
           }
+          
+          try {
+              const msg = UTF8ToString(ptr);
+              if (!msg) {
+                  console.error("WebViewPostMessage: failed to convert string");
+                  return;
+              }
   
-          // Android WebView (addJavascriptInterface)
-          if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.defoldBridge) {
-              window.webkit.messageHandlers.defoldBridge.postMessage(msg);
+              // Standard web
+              if (window.defold && window.defold.postMessage) {
+                  window.defold.postMessage(msg);
+                  return;
+              }
   
-              return;
+              // Android WebView (addJavascriptInterface)
+              if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.defoldBridge) {
+                  window.webkit.messageHandlers.defoldBridge.postMessage(msg);
+                  return;
+              }
+  
+              // Fallback
+              window.postMessage(msg, "*");
+          } catch (e) {
+              console.error("WebViewPostMessage error:", e);
           }
-  
-          // Fallback
-          window.postMessage(msg, "*");
       }
 
   function ___assert_fail(condition, filename, line, func) {
